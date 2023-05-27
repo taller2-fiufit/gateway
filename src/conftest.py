@@ -51,7 +51,7 @@ async def check_empty_services(client: AsyncClient) -> None:
 @pytest.fixture
 async def created_body(client: AsyncClient) -> ServiceWithApikey:
     body = AddService(
-        name="test service", url="https://www.google.com/", path="^/google.*"
+        name="test service", url="http://localhost", path="^/local.*"
     )
 
     response = await client.post("/services", json=body.dict())

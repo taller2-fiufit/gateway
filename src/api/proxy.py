@@ -26,7 +26,9 @@ def specificity(path: str) -> int:
 
 @ttl_cache(maxsize=1, ttl=4)
 async def get_routing_table(session: AsyncSession) -> RoutingTable:
-    svcs = await services_db.get_all_services(session)
+    svcs = await services_db.get_all_services(
+        session, blocked=False, with_statuses=False
+    )
     # NOTE: svc.path and url are never None even if mypy says otherwise
     table = list(map(lambda svc: (svc.path or "", svc.url or ""), svcs))
     table.sort(key=lambda pu: specificity(pu[0]))
