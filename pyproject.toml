@@ -18,6 +18,7 @@ alembic = "^1.10.3"
 boto3 = "^1.26.122"
 boto3-stubs = {extras = ["sqs"], version = "^1.26.122"}
 httpx = "^0.23.3"
+cachetools = "^5.3.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
@@ -28,6 +29,7 @@ mypy = "^1.1.1"
 flake8 = "^6.0.0"
 aiosqlite = "^0.18.0"
 types-python-jose = "^3.3.4.6"
+types-cachetools = "^5.3.0.5"
 
 [tool.black]
 line-length = 79
