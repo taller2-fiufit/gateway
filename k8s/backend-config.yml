@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  labels:
+    app: backend
+data:
+  SQS_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/228452873325/MetricsQueue_Production

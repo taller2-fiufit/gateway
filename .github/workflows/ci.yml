@@ -1,0 +1,68 @@
+name: "CI"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '*' ]
+  merge_group:
+    types: [checks_requested]
+
+env:
+  POSTGRES_DB: db
+  POSTGRES_USER: user
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_SERVICE_HOST: localhost
+  POSTGRES_SERVICE_PORT: 5432
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Install Python
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'poetry'
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Run linter
+        run: make lint
+      - name: Run MyPy
+        run: make mypy
+      - name: Run tests
+        run: make test
+      - name: Run tests and collect coverage
+        run: make coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3

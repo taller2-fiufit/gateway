@@ -1,0 +1,27 @@
+name: "Create preview"
+
+# file: .github/workflows/preview.yaml
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  create-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Context
+        uses: okteto/context@latest
+        with:
+          token: ${{ secrets.OKTETO_TOKEN }}
+          namespace: megaredhand
+
+      - name: Deploy preview environment
+        uses: okteto/deploy-preview@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: pr-${{ github.event.number }}-gateway-megaredhand
+          timeout: 15m

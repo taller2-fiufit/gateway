@@ -1,0 +1,46 @@
+name: gateway
+
+# The build section defines how to build the images of your development environment
+# More info: https://www.okteto.com/docs/reference/manifest/#build
+build:
+  # You can use the following env vars to refer to this image in your deploy commands:
+  #  - OKTETO_BUILD_FASTAPI-EXAMPLE_REGISTRY: image registry
+  #  - OKTETO_BUILD_FASTAPI-EXAMPLE_REPOSITORY: image repo
+  #  - OKTETO_BUILD_FASTAPI-EXAMPLE_IMAGE: image name
+  #  - OKTETO_BUILD_FASTAPI-EXAMPLE_TAG: image tag
+  main:
+    context: .
+
+# The deploy section defines how to deploy your development environment
+# More info: https://www.okteto.com/docs/reference/manifest/#deploy
+deploy:
+  # build images
+  - okteto build -t okteto.dev/gateway
+  # update secrets
+  - kubectl delete secret "secrets" || true
+  - kubectl create secret generic "secrets"
+    --from-literal="auth-secret"="${AUTH_SECRET}"
+    --from-literal="aws-access-key-id"="${AWS_ACCESS_KEY_ID}"
+    --from-literal="aws-secret-access-key"="${AWS_SECRET_ACCESS_KEY}"
+  # update kubernetes status
+  - kubectl apply -f k8s
+  # restart app
+  - kubectl rollout restart deployment backend-deployment
+# The dependencies section defines other git repositories to be deployed as part of your development environment
+# More info: https://www.okteto.com/docs/reference/manifest/#dependencies
+# dependencies:
+#   - https://github.com/okteto/sample
+
+# The dev section defines how to activate a development container
+# More info: https://www.okteto.com/docs/reference/manifest/#dev
+# dev:
+#   app-deployment:
+#     image: ${OKTETO_BUILD_MAIN_IMAGE}
+#     sync:
+#       - .:/app
+#     forward:
+#       - 80:80
+#     reverse:
+#       - 9000:9000
+#     volumes:
+#       - /root/.cache/pip

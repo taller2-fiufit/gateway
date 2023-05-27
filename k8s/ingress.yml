@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway
+  # https://www.okteto.com/docs/cloud/ssl
+  annotations:
+    dev.okteto.com/generate-host: gateway
+spec:
+  rules:
+    - host: "*"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 80

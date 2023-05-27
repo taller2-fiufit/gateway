@@ -1,0 +1,15 @@
+# PersistentVolumes not allowed in okteto cloud:
+# https://stackoverflow.com/questions/59221434/creating-a-persistentvolume-on-okteto-cloud
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-pv-claim # Sets name of PVC
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce # Sets read and write access
+  resources:
+    requests:
+      storage: 100Mi # Sets volume size
