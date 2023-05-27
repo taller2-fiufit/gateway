@@ -39,6 +39,11 @@ spec:
                 secretKeyRef:
                   name: gateway-secrets
                   key: aws-secret-access-key
+            - name: INITIAL_SERVICES
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secrets
+                  key: initial-services
           ports:
             - containerPort: 80
           readinessProbe:
