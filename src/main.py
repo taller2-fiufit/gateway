@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 
 from src.db.services import add_initial_services
+from src.api.schema_updater import launch_openapi_generator
 from src.logging import info
 from src.db.migration import upgrade_db
 
@@ -20,8 +21,11 @@ async def lifespan(
 
     await upgrade_db()
     await add_initial_services()
+    openapi_generator = launch_openapi_generator(app)
 
     yield
+
+    openapi_generator.cancel()
 
 
 app = FastAPI(
@@ -56,7 +60,7 @@ app.add_middleware(
 
 
 @app.get("/health", include_in_schema=False)
-def health_check() -> Dict[str, str]:
+async def health_check() -> Dict[str, str]:
     """Check if server is responsive"""
     return {"status": "Alive and kicking!"}
 
@@ -68,7 +72,6 @@ async def favicon() -> FileResponse:
 
 @app.get("/docs", include_in_schema=False)
 async def swagger_ui_html() -> HTMLResponse:
-    # TODO: update openapi docs with all services
     return get_swagger_ui_html(
         openapi_url="/openapi.json",
         title=app.title,

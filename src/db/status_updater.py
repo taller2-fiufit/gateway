@@ -16,7 +16,7 @@ async def updated_service_status(service: Service) -> bool:
             response = await client.get("/health")
         return response.is_success
     except RequestError as e:
-        warn(str(e))
+        warn(f"Failed to retrieve status from '{service.name}': {e}")
 
     return False
 
