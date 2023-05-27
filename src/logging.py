@@ -16,7 +16,7 @@ def info(msg: str) -> None:
 
 
 def warn(msg: str) -> None:
-    get_uvicorn_logger().warn(msg)
+    get_uvicorn_logger().warning(msg)
 
 
 def error(msg: str) -> None:

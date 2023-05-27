@@ -58,6 +58,14 @@ class Service(AllRequiredServiceBase):
         title="Is blocked?",
         description="True if the service is blocked, false if it isn't",
     )
+    up: bool = Field(
+        title="Service is up?",
+        description="True if the service is up, false if it isn't",
+        default=False,
+    )
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
 
 class ServiceWithApikey(Service):

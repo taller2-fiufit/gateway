@@ -14,6 +14,7 @@ from src.api.model.service import (
 )
 from src.db.model.service import DBService
 from src.db.session import SessionLocal
+from src.db.status_updater import update_statuses
 from src.db.utils import get_initial_services_gen
 from src.logging import error, warn
 
@@ -41,6 +42,7 @@ async def get_all_services(
     offset: int = 0,
     limit: int = 100,
     blocked: Optional[bool] = None,
+    with_statuses: bool = True,
 ) -> List[Service]:
     """Returns all existing services"""
     query = select(DBService)
@@ -49,9 +51,12 @@ async def get_all_services(
         query = query.filter_by(blocked=blocked)
 
     res = await session.scalars(query.offset(offset).limit(limit))
-    services = res.all()
+    services = list(map(Service.from_orm, res.all()))
 
-    return list(map(Service.from_orm, services))
+    if with_statuses:
+        await update_statuses(services)
+
+    return services
 
 
 async def get_service(
