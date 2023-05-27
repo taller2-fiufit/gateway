@@ -58,7 +58,7 @@ async def add_service(
 async def patch_service(
     session: SessionDep, id: int, service: PatchService
 ) -> Service:
-    """Add a new service"""
+    """Edit a service's info"""
     patched_service = await services_db.patch_service(session, id, service)
     info(f"Patched service: {patched_service}")
     return patched_service
