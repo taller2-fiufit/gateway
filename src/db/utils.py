@@ -13,10 +13,11 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-def get_initial_services_gen() -> Generator[AddService, None, None]:
-    info("Loading intial services configuration...")
+def parse_initial_services(
+    initial_services: str,
+) -> Generator[AddService, None, None]:
     # name,url,path -> AddService(name, url, path)
-    for svc in INITIAL_SERVICES.split(";"):
+    for svc in initial_services.split(";"):
         if svc == "":
             continue
 
@@ -29,3 +30,8 @@ def get_initial_services_gen() -> Generator[AddService, None, None]:
         name, url, path = svct
         info(f"Parsed service: name='{name}' url='{url}' path='{path}'")
         yield AddService(name=name, url=url, path=path)
+
+
+def get_initial_services_gen() -> Generator[AddService, None, None]:
+    info("Loading intial services configuration...")
+    yield from parse_initial_services(INITIAL_SERVICES)

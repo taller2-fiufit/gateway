@@ -30,8 +30,6 @@ async def add_initial_services() -> None:
                         await session.delete(old)
 
                     _ = await _add_service_inner(session, svc)
-                except HTTPException:
-                    error(f"Invalid regex: '{svc.path}'")
                 except Exception as e:
                     error(e)
 
