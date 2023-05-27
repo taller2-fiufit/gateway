@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends
 
 from src.api.model.service import (
@@ -27,10 +27,21 @@ router = APIRouter(
 @router.get("")
 async def get_all_services(
     session: SessionDep,
+    offset: int = 0,
+    limit: int = 100,
+    blocked: Optional[bool] = None,
 ) -> List[Service]:
     """Get all services"""
-    # TODO: add query params
-    return await services_db.get_all_services(session)
+    return await services_db.get_all_services(session, offset, limit, blocked)
+
+
+@router.get("/{id}")
+async def get_service(
+    session: SessionDep,
+    id: int,
+) -> Service:
+    """Get service by ID"""
+    return await services_db.get_service(session, id)
 
 
 @router.post("", status_code=HTTPStatus.CREATED)
