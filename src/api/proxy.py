@@ -1,9 +1,10 @@
+import re
 from http import HTTPStatus
-from typing import List, Tuple
+from typing import Annotated, List, Tuple
 from fastapi import APIRouter, Depends, Request, Response
 from httpx import URL, AsyncClient, Response as SvcResp
 from sqlalchemy.ext.asyncio import AsyncSession
-import re
+from cachetools.func import ttl_cache
 
 from src.api.aliases import SessionDep
 from src.logging import info
@@ -15,14 +16,16 @@ router = APIRouter(
     dependencies=[Depends(get_session)],
 )
 
+RoutingTable = List[Tuple[re.Pattern[str], str]]
+TableDep = Annotated[RoutingTable, Depends(get_session)]
+
 
 def specificity(path: str) -> int:
     return sum(c not in r".\\[]()*?+" for c in path)
 
 
-async def get_routing_table(
-    session: AsyncSession,
-) -> List[Tuple[re.Pattern[str], str]]:
+@ttl_cache(maxsize=1, ttl=4)
+async def get_routing_table(session: AsyncSession) -> RoutingTable:
     svcs = await services_db.get_all_services(session)
     # NOTE: svc.path and url are never None even if mypy says otherwise
     table = list(map(lambda svc: (svc.path or "", svc.url or ""), svcs))
