@@ -22,6 +22,7 @@ deploy:
     --from-literal="auth-secret"="${AUTH_SECRET}"
     --from-literal="aws-access-key-id"="${AWS_ACCESS_KEY_ID}"
     --from-literal="aws-secret-access-key"="${AWS_SECRET_ACCESS_KEY}"
+    --from-literal="initial-services"="${INITIAL_SERVICES}"
   # update kubernetes status
   - kubectl apply -f k8s
   # restart app

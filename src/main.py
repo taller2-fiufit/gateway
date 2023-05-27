@@ -1,12 +1,13 @@
+import re
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Dict
-import re
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 
+from src.db.services import add_initial_services
 from src.logging import info
 from src.db.migration import upgrade_db
 
@@ -18,6 +19,7 @@ async def lifespan(
     info("Upgrading DB")
 
     await upgrade_db()
+    await add_initial_services()
 
     yield
 
