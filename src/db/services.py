@@ -54,6 +54,17 @@ async def get_all_services(
     return list(map(Service.from_orm, services))
 
 
+async def get_service(
+    session: AsyncSession,
+    id: int,
+) -> Service:
+    db_service = await session.get(DBService, id)
+    if db_service is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
+
+    return Service.from_orm(db_service)
+
+
 async def get_service_by_name(
     session: AsyncSession, name: str
 ) -> Optional[DBService]:
@@ -111,7 +122,7 @@ async def patch_service(
         service = await session.get(DBService, id)
 
         if service is None:
-            raise HTTPException(HTTPStatus.NOT_FOUND, "Training not found")
+            raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
 
         if patch.name is not None and patch.name != service.name:
             await check_name_is_unique(session, patch.name)
