@@ -1,6 +1,5 @@
 import re
 from http import HTTPStatus
-from logging import error
 from typing import List, Optional
 from fastapi import HTTPException
 from secrets import token_urlsafe
@@ -16,6 +15,7 @@ from src.api.model.service import (
 from src.db.model.service import DBService
 from src.db.session import SessionLocal
 from src.db.utils import get_initial_services_gen
+from src.logging import error, warn
 
 
 async def add_initial_services() -> None:
@@ -30,8 +30,10 @@ async def add_initial_services() -> None:
                         await session.delete(old)
 
                     _ = await _add_service_inner(session, svc)
+                except HTTPException as e:
+                    warn(str(e))
                 except Exception as e:
-                    error(e)
+                    error(str(e))
 
 
 async def get_all_services(
