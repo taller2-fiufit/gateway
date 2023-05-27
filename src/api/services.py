@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Annotated, List
+from typing import List
 from fastapi import APIRouter, Depends
 
 from src.api.model.service import (
@@ -9,7 +9,7 @@ from src.api.model.service import (
     ServiceWithApikey,
 )
 from src.api.aliases import SessionDep
-from src.auth import User, get_admin
+from src.auth import get_admin
 from src.db.utils import get_session
 from src.logging import info
 from src.db import services as services_db
@@ -22,9 +22,6 @@ router = APIRouter(
     # For a single-route dependency use the route decorator's parameter "dependencies"
     dependencies=[Depends(get_session), Depends(get_admin)],
 )
-
-
-AdminDep = Annotated[User, Depends(get_admin)]
 
 
 @router.get("")
