@@ -57,7 +57,8 @@ async def get_all_services(
 async def get_service_by_name(
     session: AsyncSession, name: str
 ) -> Optional[DBService]:
-    return await session.scalar(select(DBService).filter_by(name=name))
+    service = await session.scalar(select(DBService).filter_by(name=name))
+    return service
 
 
 async def check_name_is_unique(session: AsyncSession, name: str) -> None:
