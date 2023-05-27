@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres # Sets Deployment name
+  name: gateway-postgres # Sets Deployment name
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: gateway-postgres
   template:
     metadata:
       labels:
-        app: postgres
+        app: gateway-postgres
     spec:
       containers:
-        - name: postgres
+        - name: gateway-postgres
           image: postgres:15.2 # Sets Image
           imagePullPolicy: Always
           ports:
             - containerPort: 5432 # Exposes container port
           envFrom:
             - configMapRef:
-                name: postgres-config
+                name: gateway-postgres-config
           env:
             - name: PGDATA
               value: /var/lib/postgresql/data
           volumeMounts:
             - mountPath: /var/lib/postgresql
-              name: postgredb
+              name: gateway-postgredb
           readinessProbe:
             exec:
               command:
@@ -41,19 +41,19 @@ spec:
               memory: "3Gi"
               cpu: "1000m"
       volumes:
-        - name: postgredb
+        - name: gateway-postgredb
           persistentVolumeClaim:
-            claimName: postgres-pv-claim
+            claimName: gateway-postgres-pv-claim
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres # Sets service name
+  name: gateway-postgres # Sets service name
   labels:
-    app: postgres # Labels and Selectors
+    app: gateway-postgres # Labels and Selectors
 spec:
   ports:
     - port: 5432 # Sets port to run the postgres application
   selector:
-    app: postgres
+    app: gateway-postgres

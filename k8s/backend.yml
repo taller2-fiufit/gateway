@@ -1,43 +1,43 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: gateway-backend-deployment
   labels:
-    app: backend
+    app: gateway-backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: backend
+      app: gateway-backend
   template:
     metadata:
       labels:
-        app: backend
+        app: gateway-backend
     spec:
       containers:
-        - name: backend
+        - name: gateway-backend
           image: okteto.dev/gateway
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
-                name: postgres-config
+                name: gateway-postgres-config
             - configMapRef:
-                name: backend-config
+                name: gateway-backend-config
           env:
             - name: AUTH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: secrets
+                  name: gateway-secrets
                   key: auth-secret
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: secrets
+                  name: gateway-secrets
                   key: aws-access-key-id
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: secrets
+                  name: gateway-secrets
                   key: aws-secret-access-key
           ports:
             - containerPort: 80
@@ -57,10 +57,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service
+  name: gateway-backend-service
 spec:
   selector:
-    app: backend
+    app: gateway-backend
   ports:
     - protocol: TCP
       port: 80

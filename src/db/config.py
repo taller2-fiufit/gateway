@@ -10,8 +10,8 @@ DB_PASS = os.environ.get("POSTGRES_PASSWORD")
 
 # set automatically by kubernetes
 # resolves to postgres service's host/port
-DB_HOST = os.environ.get("POSTGRES_SERVICE_HOST")
-DB_PORT = os.environ.get("POSTGRES_SERVICE_PORT")
+DB_HOST = os.environ.get("GATEWAY_POSTGRES_SERVICE_HOST")
+DB_PORT = os.environ.get("GATEWAY_POSTGRES_SERVICE_PORT")
 
 REMOTE_DATABASE_URL = (
     f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
