@@ -1,24 +1,32 @@
 import asyncio
 from typing import List
-from cachetools.func import ttl_cache
+from cachetools import TTLCache
 from httpx import AsyncClient, RequestError
 
 from src.api.model.service import Service
 from src.logging import warn
 
 
-@ttl_cache(maxsize=32, ttl=4)
-async def updated_service_status(service: Service) -> bool:
+async def _updated_service_status(service: Service) -> bool:
     try:
-        async with AsyncClient(
-            base_url=service.url or ""
-        ) as client:  # never None
+        assert service.url is not None  # cannot fail
+        async with AsyncClient(base_url=service.url) as client:
             response = await client.get("/health")
         return response.is_success
     except RequestError as e:
         warn(f"Failed to retrieve status from '{service.name}': {e}")
 
     return False
+
+
+status_cache: TTLCache[Service, bool] = TTLCache(maxsize=1024, ttl=4)
+
+
+async def updated_service_status(service: Service) -> bool:
+    if service not in status_cache:
+        status_cache[service] = await _updated_service_status(service)
+
+    return status_cache[service]
 
 
 async def update_statuses(services: List[Service]) -> None:

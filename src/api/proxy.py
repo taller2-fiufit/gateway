@@ -1,10 +1,10 @@
 import re
+import time
 from http import HTTPStatus
-from typing import Annotated, List, Tuple
+from typing import Annotated, List, Optional, Tuple
 from fastapi import APIRouter, Depends, Request, Response
 from httpx import URL, AsyncClient, Response as SvcResp
 from sqlalchemy.ext.asyncio import AsyncSession
-from cachetools.func import ttl_cache
 
 from src.api.aliases import SessionDep
 from src.logging import info
@@ -24,8 +24,7 @@ def specificity(path: str) -> int:
     return sum(c not in r".\\[]()*?+" for c in path)
 
 
-@ttl_cache(maxsize=1, ttl=4)
-async def get_routing_table(session: AsyncSession) -> RoutingTable:
+async def _get_routing_table(session: AsyncSession) -> RoutingTable:
     svcs = await services_db.get_all_services(
         session, blocked=False, with_statuses=False
     )
@@ -33,6 +32,24 @@ async def get_routing_table(session: AsyncSession) -> RoutingTable:
     table = list(map(lambda svc: (svc.path or "", svc.url or ""), svcs))
     table.sort(key=lambda pu: specificity(pu[0]))
     return [(re.compile(path), url) for (path, url) in table]
+
+
+update_time: Optional[float] = 0.0
+cached_routing_table: RoutingTable = []
+
+
+async def get_routing_table(session: AsyncSession) -> RoutingTable:
+    global update_time, cached_routing_table
+    now = time.monotonic()
+    if now > (update_time if update_time is not None else now):
+        update_time = None  # lock so noone updates
+        try:
+            cached_routing_table = await _get_routing_table(session)
+        except Exception:
+            update_time = time.monotonic() + 1.0
+            raise
+
+    return cached_routing_table
 
 
 async def forward_request(svc_url: str, req: Request) -> SvcResp:

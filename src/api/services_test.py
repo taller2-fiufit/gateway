@@ -108,3 +108,28 @@ async def test_services_invalid_body(
 
     # invalid path regex
     await assert_invalid({**d, "path": ")"}, client)
+
+
+async def test_services_delete(
+    created_body: ServiceWithApikey, client: AsyncClient
+) -> None:
+    body = Service(**created_body.dict())
+
+    response = await client.get("/services")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == [body]
+
+    response = await client.get(f"/services/{body.id}")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == body
+
+    response = await client.delete(f"/services/{body.id}")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == body
+
+    response = await client.get("/services")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == []
+
+    response = await client.get(f"/services/{body.id}")
+    assert response.status_code == HTTPStatus.NOT_FOUND
