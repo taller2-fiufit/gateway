@@ -79,4 +79,8 @@ async def proxy(
     return response
 
 
-router.add_api_route("{path:path}", proxy, include_in_schema=False)
+methods = ["GET", "PUT", "POST", "PATCH", "DELETE"]
+
+router.add_api_route(
+    "{path:path}", proxy, methods=methods, include_in_schema=False
+)
