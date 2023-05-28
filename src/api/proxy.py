@@ -1,10 +1,10 @@
 import re
 from http import HTTPStatus
 from typing import Annotated, List, Tuple
+from cachetools import TTLCache
 from fastapi import APIRouter, Depends, Request, Response
 from httpx import URL, AsyncClient, Response as SvcResp
 from sqlalchemy.ext.asyncio import AsyncSession
-from cachetools.func import ttl_cache
 
 from src.api.aliases import SessionDep
 from src.logging import info
@@ -24,8 +24,7 @@ def specificity(path: str) -> int:
     return sum(c not in r".\\[]()*?+" for c in path)
 
 
-@ttl_cache(maxsize=1, ttl=4)
-async def get_routing_table(session: AsyncSession) -> RoutingTable:
+async def _get_routing_table(session: AsyncSession) -> RoutingTable:
     svcs = await services_db.get_all_services(
         session, blocked=False, with_statuses=False
     )
@@ -33,6 +32,16 @@ async def get_routing_table(session: AsyncSession) -> RoutingTable:
     table = list(map(lambda svc: (svc.path or "", svc.url or ""), svcs))
     table.sort(key=lambda pu: specificity(pu[0]))
     return [(re.compile(path), url) for (path, url) in table]
+
+
+routing_table_cache: TTLCache[None, RoutingTable] = TTLCache(maxsize=1, ttl=4)
+
+
+async def get_routing_table(session: AsyncSession) -> RoutingTable:
+    if None not in routing_table_cache:
+        routing_table_cache[None] = await _get_routing_table(session)
+
+    return routing_table_cache[None]
 
 
 async def forward_request(svc_url: str, req: Request) -> SvcResp:
