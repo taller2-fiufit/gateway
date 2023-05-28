@@ -28,10 +28,10 @@ def nested_update(
     app_schema: Dict[str, Any], child_schema: Dict[str, Any]
 ) -> Dict[str, Any]:
     for k, v in child_schema.items():
-        if k in app_schema and isinstance(v, Dict):
-            nested_update(app_schema[k], v)
-        else:
+        if k not in app_schema:
             app_schema[k] = v
+        elif isinstance(v, Dict):
+            nested_update(app_schema[k], v)
 
     return app_schema
 
