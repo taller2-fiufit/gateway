@@ -1,4 +1,5 @@
 import asyncio
+import copy
 from typing import Any, Dict
 from fastapi import FastAPI
 from httpx import AsyncClient, RequestError
@@ -54,9 +55,11 @@ async def update_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
 
 async def regenerate_openapi(app: FastAPI) -> None:
     try:
-        initial_schema = app.openapi().copy()
+        # save app's initial schema to use as base
+        initial_schema = copy.deepcopy(app.openapi())
         while True:
-            schema = await update_schema(initial_schema.copy())
+            cloned = copy.deepcopy(initial_schema)
+            schema = await update_schema(cloned)
             app.openapi_schema = schema
             await asyncio.sleep(8)
     except asyncio.CancelledError:  # task was cancelled
