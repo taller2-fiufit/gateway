@@ -1,7 +1,7 @@
 import re
+import time
 from http import HTTPStatus
-from typing import Annotated, List, Tuple
-from cachetools import TTLCache
+from typing import Annotated, List, Optional, Tuple
 from fastapi import APIRouter, Depends, Request, Response
 from httpx import URL, AsyncClient, Response as SvcResp
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,14 +34,22 @@ async def _get_routing_table(session: AsyncSession) -> RoutingTable:
     return [(re.compile(path), url) for (path, url) in table]
 
 
-routing_table_cache: TTLCache[None, RoutingTable] = TTLCache(maxsize=1, ttl=4)
+update_time: Optional[float] = 0.0
+cached_routing_table: RoutingTable = []
 
 
 async def get_routing_table(session: AsyncSession) -> RoutingTable:
-    if None not in routing_table_cache:
-        routing_table_cache[None] = await _get_routing_table(session)
+    global update_time, cached_routing_table
+    now = time.monotonic()
+    if now > (update_time if update_time is not None else now):
+        update_time = None  # lock so noone updates
+        try:
+            cached_routing_table = await _get_routing_table(session)
+        except Exception:
+            update_time = time.monotonic() + 1.0
+            raise
 
-    return routing_table_cache[None]
+    return cached_routing_table
 
 
 async def forward_request(svc_url: str, req: Request) -> SvcResp:
