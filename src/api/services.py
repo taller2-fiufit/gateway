@@ -66,7 +66,7 @@ async def patch_service(
 
 @router.delete("/{id}")
 async def delete_service(session: SessionDep, id: int) -> Service:
-    """Edit a service's info"""
+    """Delete a service"""
     deleted_service = await services_db.delete_service(session, id)
     info(f"Deleted service: {deleted_service}")
     return deleted_service
