@@ -137,3 +137,16 @@ async def patch_service(
         session.add(service)
 
     return Service.from_orm(service)
+
+
+async def delete_service(session: AsyncSession, id: int) -> Service:
+    """Deletes a service"""
+    async with session.begin():
+        service = await session.get(DBService, id)
+
+        if service is None:
+            raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
+
+        await session.delete(service)
+
+    return Service.from_orm(service)
