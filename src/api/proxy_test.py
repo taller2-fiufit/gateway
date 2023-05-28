@@ -2,7 +2,7 @@ import uvicorn
 import pytest
 from typing import AsyncGenerator
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import AsyncClient, Response
 from http import HTTPStatus
 from multiprocessing import Process
 
@@ -16,7 +16,27 @@ dummy_app = FastAPI()
 
 
 @dummy_app.get("/hello")
-async def hello() -> str:
+async def get_hello() -> str:
+    return MSG
+
+
+@dummy_app.put("/hello")
+async def put_hello() -> str:
+    return MSG
+
+
+@dummy_app.post("/hello")
+async def post_hello() -> str:
+    return MSG
+
+
+@dummy_app.patch("/hello")
+async def patch_hello() -> str:
+    return MSG
+
+
+@dummy_app.delete("/hello")
+async def delete_hello() -> str:
     return MSG
 
 
@@ -32,7 +52,12 @@ async def dummy_server() -> AsyncGenerator[None, None]:
     proc.kill()
 
 
-async def test_services_post_duplicated_name(
+def assert_method_works(response: Response) -> None:
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == MSG
+
+
+async def test_proxy_various_methods(
     dummy_server: None, client: AsyncClient
 ) -> None:
     body = AddService(
@@ -44,6 +69,8 @@ async def test_services_post_duplicated_name(
     response = await client.post("/services", json=body.dict())
     assert response.status_code == HTTPStatus.CREATED
 
-    response = await client.get("/hello")
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == MSG
+    assert_method_works(await client.get("/hello"))
+    assert_method_works(await client.put("/hello"))
+    assert_method_works(await client.post("/hello"))
+    assert_method_works(await client.patch("/hello"))
+    assert_method_works(await client.delete("/hello"))
