@@ -32,7 +32,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="Kinetix",
     version="0.1.0",
-    description="Kinetix's trainings service API",
+    description="Kinetix's API gateway",
     docs_url=None,
 )
 
