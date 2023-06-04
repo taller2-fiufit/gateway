@@ -2,7 +2,6 @@ import re
 from http import HTTPStatus
 from typing import List, Optional
 from fastapi import HTTPException
-from secrets import token_urlsafe
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +11,7 @@ from src.api.model.service import (
     Service,
     ServiceWithApikey,
 )
+from src.auth import generate_apikey, generate_salt, hash_apikey
 from src.db.model.service import DBService
 from src.db.session import SessionLocal
 from src.db.status_updater import update_statuses
@@ -110,8 +110,13 @@ async def _add_service_inner(
     check_is_valid_regex(service.path or ")")  # path is never None
     await check_name_is_unique(session, service.name or "")  # never None
 
-    apikey = token_urlsafe(32)
-    new_service = DBService(apikey=apikey, **service.dict())
+    apikey = generate_apikey()
+    salt = generate_salt()
+    hsh = hash_apikey(apikey, salt)
+
+    new_service = DBService(
+        apikey_hash=hsh, apikey_salt=salt, **service.dict()
+    )
 
     session.add(new_service)
 

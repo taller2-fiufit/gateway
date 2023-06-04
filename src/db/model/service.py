@@ -2,6 +2,7 @@ from typing import Optional
 from sqlalchemy import (
     Boolean,
     Integer,
+    LargeBinary,
     String,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -17,7 +18,8 @@ class DBService(Base):
     url: Mapped[str] = mapped_column(String(255))
     path: Mapped[str] = mapped_column(String(255))
     blocked: Mapped[bool] = mapped_column(Boolean, default=False)
-    apikey: Mapped[str] = mapped_column(String(63))  # longer than 32 bytes
+    apikey_hash: Mapped[bytes] = mapped_column(LargeBinary(64))
+    apikey_salt: Mapped[bytes] = mapped_column(LargeBinary(16))
 
     def update(
         self,

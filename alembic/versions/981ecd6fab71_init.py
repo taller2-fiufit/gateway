@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 98a0879d9710
+Revision ID: 981ecd6fab71
 Revises:
-Create Date: 2023-05-26 23:56:40.957457
+Create Date: 2023-06-03 22:33:33.718533
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = "98a0879d9710"
+revision = "981ecd6fab71"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,7 +25,8 @@ def upgrade() -> None:
         sa.Column("url", sa.String(length=255), nullable=False),
         sa.Column("path", sa.String(length=255), nullable=False),
         sa.Column("blocked", sa.Boolean(), nullable=False),
-        sa.Column("apikey", sa.String(length=63), nullable=False),
+        sa.Column("apikey_hash", sa.LargeBinary(length=64), nullable=False),
+        sa.Column("apikey_salt", sa.LargeBinary(length=16), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     with op.batch_alter_table("services", schema=None) as batch_op:
