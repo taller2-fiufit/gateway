@@ -16,6 +16,20 @@ async def token_was_invalidated(
     return invalidated_token is not None
 
 
+async def invalidate_token(
+    session: AsyncSession,
+    sub: int,
+    iat: int,
+    exp: int,
+) -> None:
+    async with session.begin():
+        await clean_up_old_entries(session)
+
+        token = DBToken(sub=sub, iat=iat, exp=exp)
+
+        session.add(token)
+
+
 async def clean_up_old_entries(
     session: AsyncSession,
 ) -> None:

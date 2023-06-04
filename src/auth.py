@@ -29,7 +29,7 @@ optional_oauth2_scheme = OAuth2PasswordBearer(
 
 class User(BaseModel):
     email: str
-    id: int
+    sub: int
     admin: bool
 
 
@@ -72,7 +72,14 @@ async def optional_token(
 
     await check_if_token_was_invalidated(session, info)
 
-    return User(email=info["email"], id=info["sub"], admin=info["admin"])
+    return User(**info)
+
+
+async def get_raw_token(
+    token: Annotated[str, Depends(oauth2_scheme)],
+) -> dict[str, Any]:
+    """Validates token and extracts user information"""
+    return parse_token(token)
 
 
 async def get_user(
@@ -93,7 +100,7 @@ async def get_admin(user: Annotated[User, Depends(get_user)]) -> User:
     return user
 
 
-DUMMY_ADMIN = User(email="dummy@example.com", id=1, admin=True)
+DUMMY_ADMIN = User(email="dummy@example.com", sub=1, admin=True)
 
 
 async def ignore_auth() -> User:
