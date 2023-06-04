@@ -99,14 +99,17 @@ async def add_service(
 ) -> ServiceWithApikey:
     """Adds a new service"""
     async with session.begin():
-        new_service = await _add_service_inner(session, service)
+        new_service, apikey = await _add_service_inner(session, service)
 
-    return ServiceWithApikey.from_orm(new_service)
+    added_service = ServiceWithApikey.from_orm(new_service)
+    added_service.apikey = apikey
+
+    return added_service
 
 
 async def _add_service_inner(
     session: AsyncSession, service: AddService
-) -> DBService:
+) -> tuple[DBService, str]:
     check_is_valid_regex(service.path or ")")  # path is never None
     await check_name_is_unique(session, service.name or "")  # never None
 
@@ -120,7 +123,7 @@ async def _add_service_inner(
 
     session.add(new_service)
 
-    return new_service
+    return new_service, apikey
 
 
 async def patch_service(
