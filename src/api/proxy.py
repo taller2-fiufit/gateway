@@ -1,7 +1,7 @@
 import re
 import time
 from http import HTTPStatus
-from typing import Annotated, List, Optional, Tuple
+from typing import List, Optional, Tuple
 from fastapi import APIRouter, Depends, Request, Response
 from httpx import URL, AsyncClient, Response as SvcResp
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,6 @@ router = APIRouter(
 )
 
 RoutingTable = List[Tuple[re.Pattern[str], str]]
-TableDep = Annotated[RoutingTable, Depends(get_session)]
 
 
 def specificity(path: str) -> int:
