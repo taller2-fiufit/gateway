@@ -64,7 +64,7 @@ async def get_service(
     id: int,
 ) -> Service:
     db_service = await session.get(DBService, id)
-    print(db_service)
+
     if db_service is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
 
