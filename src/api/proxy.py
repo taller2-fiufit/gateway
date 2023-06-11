@@ -7,7 +7,7 @@ from httpx import URL, AsyncClient, Response as SvcResp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.aliases import SessionDep
-from src.auth import get_raw_token
+from src.auth import get_raw_token, optional_token
 from src.logging import info
 from src.db.utils import get_session
 from src.db import services as services_db
@@ -15,7 +15,7 @@ import src.db.tokens as tokens_db
 
 
 router = APIRouter(
-    dependencies=[Depends(get_session)],
+    dependencies=[Depends(get_session), Depends(optional_token)],
 )
 
 RoutingTable = List[Tuple[re.Pattern[str], str]]
