@@ -11,7 +11,7 @@ async def token_was_invalidated(
     iat: int,
 ) -> bool:
     invalidated_token = await session.scalar(
-        select(DBToken).filter_by(user_id=sub, iat=iat).limit(1)
+        select(DBToken).filter_by(sub=sub, iat=iat).limit(1)
     )
     return invalidated_token is not None
 
