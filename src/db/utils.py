@@ -10,7 +10,8 @@ from src.db.session import SessionLocal
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with SessionLocal() as session:
-        yield session
+        async with session.begin():
+            yield session
 
 
 def parse_initial_services(

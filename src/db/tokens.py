@@ -22,12 +22,11 @@ async def invalidate_token(
     iat: int,
     exp: int,
 ) -> None:
-    async with session.begin():
-        await clean_up_old_entries(session)
+    await clean_up_old_entries(session)
 
-        token = DBToken(sub=sub, iat=iat, exp=exp)
+    token = DBToken(sub=sub, iat=iat, exp=exp)
 
-        session.add(token)
+    session.add(token)
 
 
 async def clean_up_old_entries(

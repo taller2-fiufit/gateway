@@ -98,8 +98,7 @@ async def add_service(
     session: AsyncSession, service: AddService
 ) -> ServiceWithApikey:
     """Adds a new service"""
-    async with session.begin():
-        new_service, apikey = await _add_service_inner(session, service)
+    new_service, apikey = await _add_service_inner(session, service)
 
     added_service = ServiceWithApikey.from_orm(new_service)
     added_service.apikey = apikey
@@ -122,6 +121,7 @@ async def _add_service_inner(
     )
 
     session.add(new_service)
+    await session.commit()
 
     return new_service, apikey
 
@@ -132,30 +132,28 @@ async def patch_service(
     """Updates the service's info"""
     check_is_valid_regex(patch.path or "")
 
-    async with session.begin():
-        service = await session.get(DBService, id)
+    service = await session.get(DBService, id)
 
-        if service is None:
-            raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
+    if service is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
 
-        if patch.name is not None and patch.name != service.name:
-            await check_name_is_unique(session, patch.name)
+    if patch.name is not None and patch.name != service.name:
+        await check_name_is_unique(session, patch.name)
 
-        service.update(**patch.dict())
+    service.update(**patch.dict())
 
-        session.add(service)
+    session.add(service)
 
     return Service.from_orm(service)
 
 
 async def delete_service(session: AsyncSession, id: int) -> Service:
     """Deletes a service"""
-    async with session.begin():
-        service = await session.get(DBService, id)
+    service = await session.get(DBService, id)
 
-        if service is None:
-            raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
+    if service is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
 
-        await session.delete(service)
+    await session.delete(service)
 
     return Service.from_orm(service)
