@@ -31,4 +31,5 @@ class DBService(Base):
         self.name = name or self.name
         self.url = url or self.url
         self.path = path or self.path
-        self.blocked = blocked or self.blocked
+        if blocked is not None:
+            self.blocked = blocked
