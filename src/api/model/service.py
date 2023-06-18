@@ -75,3 +75,7 @@ class ServiceWithApikey(Service):
         max_length=255,
         default=None,
     )
+
+
+class ServiceCount(OrmModel):
+    count: int = Field(title="Count", description="The number of services")

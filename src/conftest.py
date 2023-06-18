@@ -46,6 +46,10 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 @pytest.fixture
 async def check_empty_services(client: AsyncClient) -> None:
     await assert_returns_empty(client, "/services")
+    response = await client.get("/services/count")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"count": 0}
 
 
 @pytest.fixture
