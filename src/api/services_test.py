@@ -52,6 +52,11 @@ async def test_services_post_get(
 
     assert got == expected
 
+    response = await client.get("/services/count")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"count": 1}
+
 
 async def test_services_patch(
     created_body: ServiceWithApikey, client: AsyncClient

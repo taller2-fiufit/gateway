@@ -2,13 +2,14 @@ import re
 from http import HTTPStatus
 from typing import List, Optional
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.model.service import (
     AddService,
     PatchService,
     Service,
+    ServiceCount,
     ServiceWithApikey,
 )
 from src.auth import generate_apikey, generate_salt, hash_apikey
@@ -57,6 +58,21 @@ async def get_all_services(
         await update_statuses(services)
 
     return services
+
+
+async def count_services(
+    session: AsyncSession,
+    blocked: Optional[bool] = None,
+) -> ServiceCount:
+    """Counts the number of services"""
+    query = select(func.count()).select_from(DBService)
+
+    if blocked is not None:
+        query = query.filter_by(blocked=blocked)
+
+    count = (await session.scalar(query)) or 0
+
+    return ServiceCount(count=count)
 
 
 async def get_service(

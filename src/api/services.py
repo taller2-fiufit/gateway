@@ -6,6 +6,7 @@ from src.api.model.service import (
     AddService,
     PatchService,
     Service,
+    ServiceCount,
     ServiceWithApikey,
 )
 from src.api.aliases import SessionDep
@@ -33,6 +34,15 @@ async def get_all_services(
 ) -> List[Service]:
     """Get all services"""
     return await services_db.get_all_services(session, offset, limit, blocked)
+
+
+@router.get("/count")
+async def get_service_count(
+    session: SessionDep,
+    blocked: Optional[bool] = None,
+) -> ServiceCount:
+    """Get the number of services"""
+    return await services_db.count_services(session, blocked)
 
 
 @router.get("/{id}")
