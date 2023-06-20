@@ -1,6 +1,6 @@
 import re
 from http import HTTPStatus
-from typing import List, Optional
+from typing import List, Optional, Sequence
 from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,24 +38,34 @@ async def add_initial_services() -> None:
                     error(str(e))
 
 
-async def get_all_services(
+async def get_all_services_inner(
     session: AsyncSession,
     offset: int = 0,
     limit: int = 100,
     blocked: Optional[bool] = None,
-    with_statuses: bool = True,
-) -> List[Service]:
-    """Returns all existing services"""
+) -> Sequence[DBService]:
+    """Returns all services in DB"""
     query = select(DBService)
 
     if blocked is not None:
         query = query.filter_by(blocked=blocked)
 
     res = await session.scalars(query.offset(offset).limit(limit))
-    services = list(map(Service.from_orm, res.all()))
 
-    if with_statuses:
-        await update_statuses(services)
+    return res.all()
+
+
+async def get_all_services(
+    session: AsyncSession,
+    offset: int = 0,
+    limit: int = 100,
+    blocked: Optional[bool] = None,
+) -> List[Service]:
+    """Returns all existing services with their status"""
+    db_services = await get_all_services_inner(session, offset, limit, blocked)
+    services = list(map(Service.from_orm, db_services))
+
+    await update_statuses(services)
 
     return services
 
