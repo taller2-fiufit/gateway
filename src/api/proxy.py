@@ -14,7 +14,7 @@ from src.db import services as services_db
 import src.db.tokens as tokens_db
 
 
-APIKEY_HEADER = "x-apikey"
+APIKEY_HEADER = "X-Apikey"
 
 
 router = APIRouter(
