@@ -12,7 +12,7 @@ from src.api.model.service import (
     ServiceCount,
     ServiceWithApikey,
 )
-from src.auth import generate_apikey, generate_salt, hash_apikey
+from src.auth import generate_apikey
 from src.db.model.service import DBService
 from src.db.session import SessionLocal
 from src.db.status_updater import update_statuses
@@ -129,12 +129,8 @@ async def _add_service_inner(
     await check_name_is_unique(session, service.name or "")  # never None
 
     apikey = generate_apikey()
-    salt = generate_salt()
-    hsh = hash_apikey(apikey, salt)
 
-    new_service = DBService(
-        apikey_hash=hsh, apikey_salt=salt, **service.dict()
-    )
+    new_service = DBService(apikey=apikey, **service.dict())
 
     session.add(new_service)
     await session.commit()
