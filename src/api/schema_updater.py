@@ -3,14 +3,14 @@ import copy
 from typing import Any, Dict
 from fastapi import FastAPI
 from httpx import AsyncClient, RequestError
+from src.db.model.service import DBService
 
-from src.api.model.service import Service
 from src.db.session import SessionLocal
 from src.db import services as services_db
 from src.logging import warn
 
 
-async def retrieve_schema(service: Service) -> Dict[str, Any]:
+async def retrieve_schema(service: DBService) -> Dict[str, Any]:
     try:
         async with AsyncClient(
             base_url=service.url or ""
@@ -39,8 +39,8 @@ def nested_update(
 
 async def update_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     async with SessionLocal() as session:
-        services = await services_db.get_all_services(
-            session, blocked=False, with_statuses=False
+        services = await services_db.get_all_services_inner(
+            session, blocked=False
         )
 
     children_schemas = await asyncio.gather(

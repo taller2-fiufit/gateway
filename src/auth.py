@@ -1,6 +1,4 @@
 import os
-import hashlib
-import base64
 import secrets
 from http import HTTPStatus
 from typing import Annotated, Any, Optional
@@ -109,18 +107,7 @@ async def ignore_auth() -> User:
 
 
 APIKEY_LEN = 32
-SALT_LEN = 16
-SCRYPT_PARAMS = {"n": 2**12, "r": 16, "p": 1, "dklen": 64}
 
 
 def generate_apikey() -> str:
     return secrets.token_urlsafe(APIKEY_LEN)
-
-
-def generate_salt() -> bytes:
-    return secrets.token_bytes(SALT_LEN)
-
-
-def hash_apikey(apikey: str, salt: bytes) -> bytes:
-    b_apikey = base64.urlsafe_b64decode(apikey + "=")  # add needed padding
-    return hashlib.scrypt(b_apikey, salt=salt, **SCRYPT_PARAMS)

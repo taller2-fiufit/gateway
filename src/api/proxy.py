@@ -14,11 +14,15 @@ from src.db import services as services_db
 import src.db.tokens as tokens_db
 
 
+APIKEY_HEADER = "X-Apikey"
+
+
 router = APIRouter(
     dependencies=[Depends(get_session), Depends(optional_token)],
 )
 
-RoutingTable = List[Tuple[re.Pattern[str], str]]
+ServiceInfo = Tuple[str, str]  # (url, apikey)
+RoutingTable = List[Tuple[re.Pattern[str], ServiceInfo]]
 
 
 @router.delete("/tokens", tags=["Auth"])
@@ -39,13 +43,11 @@ def specificity(path: str) -> int:
 
 
 async def _get_routing_table(session: AsyncSession) -> RoutingTable:
-    svcs = await services_db.get_all_services(
-        session, blocked=False, with_statuses=False
-    )
+    svcs = await services_db.get_all_services_inner(session, blocked=False)
     # NOTE: svc.path and url are never None even if mypy says otherwise
-    table = list(map(lambda svc: (svc.path or "", svc.url or ""), svcs))
+    table = list(map(lambda svc: (svc.path, (svc.url, svc.apikey)), svcs))
     table.sort(key=lambda pu: specificity(pu[0]))
-    return [(re.compile(path), url) for (path, url) in table]
+    return [(re.compile(path), info) for (path, info) in table]
 
 
 update_time: Optional[float] = 0.0
@@ -66,12 +68,17 @@ async def get_routing_table(session: AsyncSession) -> RoutingTable:
     return cached_routing_table
 
 
-async def forward_request(svc_url: str, req: Request) -> SvcResp:
+async def forward_request(svc_info: ServiceInfo, req: Request) -> SvcResp:
+    svc_url, svc_apikey = svc_info
+
     headers = dict(req.headers)
     # content-length should be set according to request length
     headers.pop("content-length", None)
     # host should be set according to requested host
     headers.pop("host", None)
+
+    # add apikey
+    headers[APIKEY_HEADER] = svc_apikey
 
     url = URL(path=req.url.path, query=req.url.query.encode("utf-8"))
     content = req.stream()
@@ -86,6 +93,7 @@ async def forward_request(svc_url: str, req: Request) -> SvcResp:
         )
         svc_response = await client.send(svc_req)
 
+    svc_response.headers.pop(APIKEY_HEADER, None)
     return svc_response
 
 
@@ -94,16 +102,17 @@ async def proxy(
 ) -> Response:
     path = request.url.path
     routing_table = await get_routing_table(session)
-    url = next(
-        (url for (regex, url) in routing_table if regex.fullmatch(path)), None
+    svc_info = next(
+        (info for (regex, info) in routing_table if regex.fullmatch(path)),
+        None,
     )
-    if url is None:
+    if svc_info is None:
         response.status_code = HTTPStatus.NOT_FOUND
         return response
 
-    info(f"Redirecting request to '{url}{path}'")
+    info(f"Redirecting request to '{svc_info[0]}{path}'")
 
-    svc_response = await forward_request(url, request)
+    svc_response = await forward_request(svc_info, request)
 
     response.body = svc_response.content
     response.status_code = svc_response.status_code
