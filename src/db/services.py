@@ -17,7 +17,7 @@ from src.db.model.service import DBService
 from src.db.session import SessionLocal
 from src.db.status_updater import update_statuses
 from src.db.utils import get_initial_services_gen
-from src.logging import error, warn
+from src.logging import error, warn, info
 
 
 async def add_initial_services() -> None:
@@ -29,9 +29,13 @@ async def add_initial_services() -> None:
                     old = await get_service_by_name(session, svc.name or "")
 
                     if old is not None:
-                        await session.delete(old)
-
-                    _ = await _add_service_inner(session, svc)
+                        old.update(**svc.dict())
+                        await session.commit()
+                    else:
+                        _, key = await _add_service_inner(session, svc)
+                        info(
+                            f"Added initial service '{svc.name}' with key '{key}'"
+                        )
                 except HTTPException as e:
                     warn(str(e))
                 except Exception as e:
