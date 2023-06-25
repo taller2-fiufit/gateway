@@ -44,6 +44,7 @@ API-related code. It contains:
 * `services.py`: router and endpoints related to services
 * `services_test.py`: tests for the aforementioned endpoints
 * `proxy.py`: router for forwarding client requests to services
+* `proxy_test.py`: tests for the proxy functionality
 
 ### `db/`
 
@@ -51,4 +52,5 @@ Database interaction related code. It contains:
 
 * `model/`: *ORM* models used by *SQLAlchemy*
 * `migration.py`: code for performing migrations using *alembic*
-* `services.py`: function wrappers for interacting with the database
+* `services.py`: function wrappers for interacting with the *services* in the database
+* `tokens.py`: function wrappers for interacting with the *tokens* in the database

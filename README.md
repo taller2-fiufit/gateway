@@ -31,3 +31,7 @@ make run
 
 This project uses the *black* formatter, *flake8* linter, *mypy* static type checker, and *pytest* test suite in the CI pipeline.
 To run all of these locally, use the command `make all`, or use one of the following make targets: `format`, `lint`, `mypy`, `test`.
+
+## Documentation
+
+Information about the API and the repository structure can be found in the [docs](./docs) folder.
