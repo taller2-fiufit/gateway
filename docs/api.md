@@ -11,6 +11,8 @@ The whole API consists of multiple services:
 Each of these services don't know about each other, and accept requests from the *gateway* only.
 You can see the OpenAPI documentation of the whole API at [gateway-megaredhand.cloud.okteto.net/docs](https://gateway-megaredhand.cloud.okteto.net/docs)
 
+[Architecture Diagram](https://drive.google.com/file/d/1biSGY30BKVZ7lzDXBeCEgCB6vgVUsaGZ/view?usp=sharing)
+
 ## Gateway
 
 The purpose of this gateway is to provide a single entry point to the API.
@@ -28,7 +30,9 @@ It also stores invalidated tokens, and blocks any request using one of these.
 
 [Link to repo](https://github.com/taller2-fiufit/svc-users)
 
-...info about users service...
+This service is responsible for managing Kinetix Users.
+It's mainly responsible for the lifecycle of the User entity, managing authentication and authorization, both for regular Users and Admins.
+It uses a *PostgreSQL* database to store this information and sends messages to an AWS-SQS queue to notify the metrics service of important events.
 
 ## Trainings service
 
@@ -50,4 +54,5 @@ It uses a *PostgreSQL* database to store this information.
 
 [Link to repo](https://github.com/taller2-fiufit/svc-metrics)
 
-...info about metrics service...
+This service is responsible for asynchronously receiving events from other Kinetix services and storing them for later retrieval. It also produces the business metrics consumed by the Backoffice.
+It uses a *PostgreSQL* database to store this information and an AWS-SQS queue to handle event processing.
