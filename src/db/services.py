@@ -64,12 +64,16 @@ async def get_all_services(
     offset: int = 0,
     limit: int = 100,
     blocked: Optional[bool] = None,
+    up: Optional[bool] = None,
 ) -> List[Service]:
     """Returns all existing services with their status"""
     db_services = await get_all_services_inner(session, offset, limit, blocked)
     services = list(map(Service.from_orm, db_services))
 
     await update_statuses(services)
+
+    if up is not None:
+        services = [s for s in services if s.up == up]
 
     return services
 
