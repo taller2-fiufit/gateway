@@ -31,18 +31,20 @@ async def get_all_services(
     offset: int = 0,
     limit: int = 100,
     blocked: Optional[bool] = None,
+    up: Optional[bool] = None,
 ) -> List[Service]:
     """Get all services"""
-    return await services_db.get_all_services(session, offset, limit, blocked)
+    return await services_db.get_all_services(session, offset, limit, blocked, up)
 
 
 @router.get("/count")
 async def get_service_count(
     session: SessionDep,
     blocked: Optional[bool] = None,
+    up: Optional[bool] = None,
 ) -> ServiceCount:
     """Get the number of services"""
-    return await services_db.count_services(session, blocked)
+    return await services_db.count_services(session, blocked, up)
 
 
 @router.get("/{id}")
