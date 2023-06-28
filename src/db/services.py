@@ -98,7 +98,11 @@ async def get_service(
     if db_service is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Service not found")
 
-    return Service.from_orm(db_service)
+    service = Service.from_orm(db_service)
+
+    await update_statuses([service])
+
+    return service
 
 
 async def get_service_by_name(
