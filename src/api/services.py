@@ -41,10 +41,9 @@ async def get_all_services(
 async def get_service_count(
     session: SessionDep,
     blocked: Optional[bool] = None,
-    up: Optional[bool] = None,
 ) -> ServiceCount:
     """Get the number of services"""
-    return await services_db.count_services(session, blocked, up)
+    return await services_db.count_services(session, blocked)
 
 
 @router.get("/{id}")
