@@ -29,11 +29,13 @@ RoutingTable = List[Tuple[re.Pattern[str], ServiceInfo]]
 async def logout(
     session: SessionDep,
     response: Response,
-    token: Annotated[dict[str, Any], get_raw_token],
+    token: Annotated[dict[str, Any], get_raw_token]]
+    request: Request,
 ) -> Response:
     await tokens_db.invalidate_token(
         session, token["sub"], token["iat"], token["exp"]
     )
+    await proxy(session, request.url.path, response, request)
     response.status_code = HTTPStatus.OK
     return response
 
