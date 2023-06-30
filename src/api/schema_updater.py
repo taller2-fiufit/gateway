@@ -3,19 +3,21 @@ import copy
 from typing import Any, Dict
 from fastapi import FastAPI
 from httpx import AsyncClient, RequestError
-from src.db.model.service import DBService
 
+from src.db.model.service import DBService
 from src.db.session import SessionLocal
 from src.db import services as services_db
 from src.logging import warn
+from src.api.proxy import APIKEY_HEADER
 
 
 async def retrieve_schema(service: DBService) -> Dict[str, Any]:
+    headers = {APIKEY_HEADER: service.apikey}
     try:
         async with AsyncClient(
             base_url=service.url or ""
         ) as client:  # never None
-            response = await client.get("/openapi.json")
+            response = await client.get("/openapi.json", headers=headers)
 
         response = response.json()
         return response if isinstance(response, Dict) else {}
