@@ -2,13 +2,13 @@ import re
 import time
 from http import HTTPStatus
 from typing import Annotated, Any, List, Optional, Tuple
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from httpx import URL, AsyncClient, Response as SvcResp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.aliases import SessionDep
 from src.auth import get_raw_token, optional_token
-from src.logging import info
+from src.logging import info, error
 from src.db.utils import get_session
 from src.db import services as services_db
 import src.db.tokens as tokens_db
@@ -114,11 +114,14 @@ async def proxy(
 
     info(f"Redirecting request to '{svc_info[0]}{path}'")
 
-    svc_response = await forward_request(svc_info, request)
-
-    response.body = svc_response.content
-    response.status_code = svc_response.status_code
-    return response
+    try:
+        svc_response = await forward_request(svc_info, request)
+        response.body = svc_response.content
+        response.status_code = svc_response.status_code
+        return response
+    except Exception as e:
+        error(str(e))
+        raise HTTPException(HTTPStatus.NOT_FOUND)
 
 
 methods = ["GET", "PUT", "POST", "PATCH", "DELETE"]

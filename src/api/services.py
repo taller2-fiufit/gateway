@@ -34,7 +34,9 @@ async def get_all_services(
     up: Optional[bool] = None,
 ) -> List[Service]:
     """Get all services"""
-    return await services_db.get_all_services(session, offset, limit, blocked, up)
+    return await services_db.get_all_services(
+        session, offset, limit, blocked, up
+    )
 
 
 @router.get("/count")
