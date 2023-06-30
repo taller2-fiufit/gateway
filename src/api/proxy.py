@@ -1,13 +1,13 @@
+import asyncio
 import re
-import time
 from http import HTTPStatus
-from typing import Annotated, Any, List, Optional, Tuple
+from typing import Annotated, Any, List, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from httpx import URL, AsyncClient, Response as SvcResp
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.aliases import SessionDep
 from src.auth import get_raw_token, optional_token
+from src.db.session import SessionLocal
 from src.logging import info, error
 from src.db.utils import get_session
 from src.db import services as services_db
@@ -15,6 +15,7 @@ import src.db.tokens as tokens_db
 
 
 APIKEY_HEADER = "X-Apikey"
+REGEN_DELAY = 1  # seconds
 
 
 router = APIRouter(
@@ -23,6 +24,8 @@ router = APIRouter(
 
 ServiceInfo = Tuple[str, str]  # (url, apikey)
 RoutingTable = List[Tuple[re.Pattern[str], ServiceInfo]]
+
+routing_table: RoutingTable = []
 
 
 @router.delete("/tokens", tags=["Auth"])
@@ -44,30 +47,28 @@ def specificity(path: str) -> int:
     return sum(c not in r".\\[]()*?+" for c in path)
 
 
-async def _get_routing_table(session: AsyncSession) -> RoutingTable:
-    svcs = await services_db.get_all_services_inner(session, blocked=False)
+async def build_routing_table() -> RoutingTable:
+    async with SessionLocal() as session:
+        svcs = await services_db.get_all_services_inner(session, blocked=False)
+
     # NOTE: svc.path and url are never None even if mypy says otherwise
     table = list(map(lambda svc: (svc.path, (svc.url, svc.apikey)), svcs))
     table.sort(key=lambda pu: specificity(pu[0]))
     return [(re.compile(path), info) for (path, info) in table]
 
 
-update_time: Optional[float] = 0.0
-cached_routing_table: RoutingTable = []
+async def regenerate_routing_table() -> None:
+    global routing_table
+    try:
+        while True:
+            routing_table = await build_routing_table()
+            await asyncio.sleep(REGEN_DELAY)
+    except asyncio.CancelledError:  # task was cancelled
+        return
 
 
-async def get_routing_table(session: AsyncSession) -> RoutingTable:
-    global update_time, cached_routing_table
-    now = time.monotonic()
-    if now > (update_time if update_time is not None else now):
-        update_time = None  # lock so noone updates
-        try:
-            cached_routing_table = await _get_routing_table(session)
-        except Exception:
-            update_time = time.monotonic() + 1.0
-            raise
-
-    return cached_routing_table
+def launch_routing_table_generator() -> asyncio.Task[Any]:
+    return asyncio.create_task(regenerate_routing_table())
 
 
 async def forward_request(svc_info: ServiceInfo, req: Request) -> SvcResp:
@@ -99,13 +100,20 @@ async def forward_request(svc_info: ServiceInfo, req: Request) -> SvcResp:
     return svc_response
 
 
+async def get_routing_table() -> RoutingTable:
+    return routing_table
+
+
 async def proxy(
-    session: SessionDep, path: str, response: Response, request: Request
+    session: SessionDep,
+    path: str,
+    response: Response,
+    request: Request,
+    table: RoutingTable = Depends(get_routing_table),
 ) -> Response:
     path = request.url.path
-    routing_table = await get_routing_table(session)
     svc_info = next(
-        (info for (regex, info) in routing_table if regex.fullmatch(path)),
+        (info for (regex, info) in table if regex.fullmatch(path)),
         None,
     )
     if svc_info is None:

@@ -9,6 +9,10 @@ from src.auth import get_admin, get_user, ignore_auth
 from src.db.migration import downgrade_db
 from src.main import lifespan, app
 from src.test_utils import assert_returns_empty
+from src.api.proxy import (
+    get_routing_table,
+    build_routing_table,
+)
 
 
 # https://stackoverflow.com/questions/71925980/cannot-perform-operation-another-operation-is-in-progress-in-pytest
@@ -30,8 +34,11 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     await downgrade_db()
 
     # https://fastapi.tiangolo.com/advanced/testing-dependencies/
+    # dummy authentication
     app.dependency_overrides[get_user] = ignore_auth
     app.dependency_overrides[get_admin] = ignore_auth
+    # don't cache routing table
+    app.dependency_overrides[get_routing_table] = build_routing_table
 
     async with lifespan(app):
         async with AsyncClient(app=app, base_url="http://test") as client:

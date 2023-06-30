@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 
+from src.api.proxy import launch_routing_table_generator
 from src.db.services import add_initial_services
 from src.api.schema_updater import launch_openapi_generator
 from src.logging import info
@@ -22,9 +23,11 @@ async def lifespan(
     await upgrade_db()
     await add_initial_services()
     openapi_generator = launch_openapi_generator(app)
+    routing_table_generator = launch_routing_table_generator()
 
     yield
 
+    routing_table_generator.cancel()
     openapi_generator.cancel()
 
 
